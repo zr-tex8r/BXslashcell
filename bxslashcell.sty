@@ -1,0 +1,215 @@
+% bxslashcell.sty
+
+%% package declaration
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bxslashcell}[2015/06/27 v0.2]
+
+%% preparations
+\def\bxsx@pkgname{bxslashcell}
+\def\bxsx@error{\PackageError\bxsx@pkgname}
+\providecommand\bxDebug[1]{}
+
+%--------------------------------------- handle options
+
+%% pass the driver option to pict2e
+\RequirePackage{ifpdf,ifxetex}
+\@for\bxsx@tmpa:={%
+  dvips,xdvi,dvipdf,dvipdfm,dvipdfmx,%
+  pdftex,xetex,dvipsone,dviwindo,oztex,%
+  textures,pctexps,pctex32,vtex,original}%
+\do{%
+  \edef\bxsx@tmpa{%
+    \noexpand\DeclareOption{\bxsx@tmpa}%
+      {\noexpand\PassOptionsToPackage{\bxsx@tmpa}{pict2e}}}%
+   \bxsx@tmpa}
+\ifpdf \bxDebug{(pdf-mode)}%
+  \ExecuteOptions{pdftex}
+\fi
+\ifxetex \bxDebug{(XeTeX)}%
+  \ExecuteOptions{xetex}
+\fi
+\ProcessOptions*
+
+%% load packages
+\RequirePackage{pict2e}
+\RequirePackage{keyval}
+
+%--------------------------------------- helpers
+
+%% unique tokens
+\def\bxsx@end{\bxsx@end@}
+\def\bxsx@mt{\bxsx@mt@}
+\let\bxsx@term\indent % unexpandable
+
+%% switches
+\newif\ifbxsx@ok
+\newif\ifbxsx@backward
+\newif\ifbxsx@forward
+
+%% constants
+\let\bxsx@len@auto\maxdimen
+
+%% \bxsx@check\if...<condition>\fi
+% Sets bxsx@ok.
+\@gobbletwo\if\if \def\bxsx@check#1\fi{%
+  #1\bxsx@oktrue\else\bxsx@okfalse\fi}
+
+%% \bxsx@check@same{<str1>}{<str2>}
+\def\bxsx@check@same#1#2{%
+  \edef\bxsx@tmpa{#1}\edef\bxsx@tmpb{#2}%
+  \bxsx@check\ifx\bxsx@tmpa\bxsx@tmpb\fi}
+
+%% \bxsx@check@real{<str>}
+\def\bxsx@check@real#1{%
+  \bxsx@okfalse
+  \afterassignment\bxsx@check@real@a\@tempdima=#1\p@\bxsx@term  
+  \ifbxsx@ok \edef\bxsx@real{\strip@pt\@tempdima}%
+  \else \let\bxsx@real\relax
+  \fi}
+\def\bxsx@check@real@a#1\bxsx@term{%
+  \ifx\bxsx@mt#1\bxsx@mt \bxsx@oktrue \fi}
+
+%--------------------------------------- parameters
+
+%% variables
+\newdimen\bxsx@left
+\newdimen\bxsx@right
+\newdimen\bxsx@width
+\newdimen\bxsx@height
+\let\bxsx@lines\relax
+\newdimen\bxsx@adjust
+
+%%<*> \setupslashcell{<key>=<value>,...}
+\newcommand*\setupslashcell{%
+  \setkeys{bxsx}}
+
+%% keyval
+% left=<dimen>
+\define@key{bxsx}{left}{%
+  \bxsx@set@margin\bxsx@left{#1}}
+% right=<dimen>
+\define@key{bxsx}{right}{%
+  \bxsx@set@margin\bxsx@right{#1}}
+% right=<dimen>
+\define@key{bxsx}{height}{%
+  \bxsx@check@real{#1}%
+  \let\bxsx@lines\bxsx@real
+  \ifbxsx@ok \bxsx@height\bxsx@len@auto
+  \else \setlength\bxsx@height{#1}%
+  \fi}
+% adjust=<dimen>
+\define@key{bxsx}{adjust}{%
+  \setlength\bxsx@adjust{#1}}
+% [form=]<form>
+\define@key{bxsx}{form}{%
+  \bxsx@set@form{#1}}
+\define@key{bxsx}{slash}[]{%
+  \bxsx@set@form@enum{#1}{slash}}
+\define@key{bxsx}{backslash}[]{%
+  \bxsx@set@form@enum{#1}{backslash}}
+\define@key{bxsx}{cross}[]{%
+  \bxsx@set@form@enum{#1}{cross}}
+
+%% \bxsx@set@form
+\def\bxsx@set@form#1{%
+  \bxsx@okfalse
+  \@nameuse{bxsx@set@form@@#1}%
+  \ifbxsx@ok\else
+    \bxsx@error{Unknown form '#1' specified}\@ehc
+  \fi}
+\def\bxsx@set@form@enum#1#2{%
+  \ifx\bxsx@mt#1\bxsx@mt \bxsx@set@form{#2}%
+  \else
+    \bxsx@error{Option '#2' must not have a value}\@ehc
+  \fi}
+
+%% \bxsx@set@margin
+\def\bxsx@set@margin#1#2{%
+  \bxsx@check@same{#2}{auto}\ifbxsx@ok #1\bxsx@len@auto
+  \else \setlength{#1}{#2}%
+  \fi}
+
+%--------------------------------------- main
+
+%% \bxsx@set@form@@slash
+\def\bxsx@set@form@@slash{%
+  \bxsx@forwardtrue \bxsx@backwardfalse
+  \bxsx@oktrue}
+%% \bxsx@set@form@@backslash
+\def\bxsx@set@form@@backslash{%
+  \bxsx@forwardfalse \bxsx@backwardtrue
+  \bxsx@oktrue}
+%% \bxsx@set@form@@cross
+\def\bxsx@set@form@@cross{%
+  \bxsx@forwardtrue \bxsx@backwardtrue
+  \bxsx@oktrue}
+
+%% \bxsx@check@in@array
+% Checsk if an array (rather than tabular) is used.
+\def\bxsx@check@in@array{%
+  \bxsx@check\ifx\@acol\@arrayacol\fi}
+
+\newcommand*\slashcell[2][]{%
+  \begingroup
+    \setlength\bxsx@width{#2}%
+    \setkeys{bxsx}{#1}%
+    \bxsx@resolve@dimen
+    \bxDebug{\bxsx@debug@dimen}%
+    \bxsx@draw@slash
+  \endgroup}
+
+%% \bxsx@resolve@dimen
+\def\bxsx@resolve@dimen{%
+  \bxsx@check@in@array
+  \@tempdimb=\ifbxsx@ok\arraycolsep\else\tabcolsep\fi
+  \ifdim\bxsx@left=\bxsx@len@auto
+    \bxsx@left=\@tempdimb
+  \fi
+  \ifdim\bxsx@right=\bxsx@len@auto
+    \bxsx@right=\@tempdimb
+  \fi
+  \bxsx@left-\bxsx@left
+  \advance\bxsx@right\bxsx@width
+  \ifdim\bxsx@height=\bxsx@len@auto
+    \bxsx@height-\normalbaselineskip
+    \advance\bxsx@height\bxsx@lines\normalbaselineskip
+    \advance\bxsx@height\arraystretch\ht\strutbox
+    \advance\bxsx@height\arraystretch\dp\strutbox
+  \fi
+  \advance\bxsx@adjust\arraystretch\ht\strutbox
+  \@tempdima\bxsx@adjust
+  \advance\bxsx@adjust-\bxsx@height
+  \bxsx@height\@tempdima
+  \advance\bxsx@left-\@halfwidth \advance\bxsx@right\@halfwidth
+  \advance\bxsx@adjust-\@halfwidth \advance\bxsx@height\@halfwidth
+}
+
+%% \bxsx@draw@slash
+\def\bxsx@draw@slash{%
+  \unitlength\p@ \let\*\strip@pt
+  \begin{picture}(\*\bxsx@width,0)%
+  \buttcap
+  \ifbxsx@forward
+    \Line(\*\bxsx@left,\*\bxsx@adjust)(\*\bxsx@right,\*\bxsx@height)%
+  \fi
+  \ifbxsx@backward
+    \Line(\*\bxsx@left,\*\bxsx@height)(\*\bxsx@right,\*\bxsx@adjust)%
+  \fi
+  \end{picture}}
+
+%% \bxsx@debug@dimen
+\def\bxsx@debug@dimen{%
+  left=\the\bxsx@left^^J%
+  right=\the\bxsx@right^^J%
+  height=\the\bxsx@height^^J%
+  adjust=\the\bxsx@adjust}
+
+%--------------------------------------- initial settings
+
+%% default values
+\setupslashcell{%
+  backslash,left=auto,right=auto,height=1,adjust=0pt}
+
+%---------------------------------------  all done
+\endinput
+%% EOF

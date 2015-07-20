@@ -1,0 +1,63 @@
+% pLaTeX文書
+\documentclass[a4paper,dvipdfmx]{jsarticle}% 要ドライバ指定
+\usepackage{bxslashcell}
+\usepackage{array}% あった方が綺麗
+\begin{document}
+
+\section{行の縦幅が通常通りの場合}
+
+この場合、\verb|\slashcell| の縦幅（\verb|height|）を
+指定する必要はない。
+以下の表の左上のセルの内容は以下の通りである：
+\begin{quote}\small\begin{verbatim}
+\slashcell{5zw}
+\end{verbatim}\end{quote}
+
+\begin{center}
+  \begin{tabular}{|c||c|r|}
+    \hline
+    \slashcell{5zw} & 値段 & カロリー \\
+    \hline\hline
+    牛丼並盛 & 500円 & 600 kcal \\
+    牛丼大盛 & 1,000円 & 800 kcal \\
+    牛丼特盛 & 1,500円 & 1,000 kcal \\
+    \hline
+    牛皿並盛 & 300円 & 250 kcal \\
+    牛皿大盛 & 700円 & 300 kcal \\
+    牛皿特盛 & 1,000円 & 350 kcal \\
+    \hline
+  \end{tabular}
+\end{center}
+
+\section{当該行に複数行テキストのセルがある場合}
+
+\verb|\slashcell| のあるセルと同じ行に \verb|p| 指定のセルが
+存在する場合は、そのセルがもつテキストの（組版結果の）行数
+（\verb|p| のセルが複数ある場合は最大の行数）を \verb|height|
+パラメタに指定する。
+以下の表の左上のセルの内容は以下の通りである：
+\begin{quote}\small\begin{verbatim}
+\slashcell[cross,height=2]{6zw}
+\end{verbatim}\end{quote}
+
+\begin{center}
+  \renewcommand{\arraystretch}{1.2}
+  \newcommand*{\xHC}[2]{%
+    \multicolumn{1}{|p{4zw}|}{%
+      \centering #1\\\mbox{\<（#2）\<}}}
+  \begin{tabular}{|c||r|r|}
+    \hline
+    \slashcell[cross,height=2]{6zw} & \xHC{値段}{円}
+      & \xHC{カロリー}{kcal} \tabularnewline
+    \hline\hline
+    牛丼並盛 & 500 & 600  \\
+    牛丼大盛 & 1,000 & 800  \\
+    牛丼特盛 & 1,500 & 1,000  \\
+    \hline
+    牛皿並盛 & 300 & 250  \\
+    牛皿大盛 & 700 & 300  \\
+    牛皿特盛 & 1,000 & 350  \\
+    \hline
+  \end{tabular}
+\end{center}
+\end{document}
